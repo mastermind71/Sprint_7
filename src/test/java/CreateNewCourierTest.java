@@ -1,130 +1,73 @@
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import jdk.jfr.Description;
+import org.example.UsedUrl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
-
-import static io.restassured.RestAssured.given;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.*;
 
 public class CreateNewCourierTest {
     @Before
     @Description("Url api scooter")
     public void setUp() {
-        RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru/";
+        RestAssured.baseURI = UsedUrl.scooterUrl;
     }
 
     @Test
     @Description("Test for create courier with all positive parameters")
     public void weCanCreateNewCourierWithPositiveParameters() {
-        File json = new File("src/test/resources/createNewCourier.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(201);
-
-
+        CourierApi.createCourier("DimDimich", "1234", "saske")
+                .then()
+                .statusCode(SC_CREATED);
     }
     @After
     @Description("After everyone tests, delete courier with parameters")
     public void deleteThisCourier() {
-        File json = new File("src/test/resources/fileForDeleteNewCourier.json");
-        Response response = given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier/login");
-        if(response.statusCode() != 200) {
-            return;
-        }
-        String id = response.then().statusCode(200).extract().path("id").toString();
-        String path = String.format("/api/v1/courier/%s", id);
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .when()
-                .delete(path)
-                .then().statusCode(200);
+        CourierApi.deleteCourier("DimDimich", "1234");
     }
 
     @Test
     @Description("Test for create courier twice attempt")
     public void tryingCreateDoubleCouriersWithSameNames() {
-        File json = new File("src/test/resources/createNewCourier.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(201);
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(409);
+        CourierApi.createCourier("DimDimich", "1234", "saske")
+                .then()
+                .statusCode(SC_CREATED);
+        CourierApi.createCourier("DimDimich", "1234", "saske")
+                .then()
+                .statusCode(SC_CONFLICT);
     }
     @Test
     @Description("Test for comparison body response")
     public void checkOkTrue(){
-        File json = new File("src/test/resources/createNewCourier.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(201).assertThat().body("ok",equalTo(true));
+        CourierApi.createCourier("DimDimich", "1234", "saske")
+                .then()
+                .statusCode(SC_CREATED).assertThat().body("ok",equalTo(true));
 
     }
 
     @Test
     @Description("Trying create courier without login")
     public void weCantCreateCourierWithMissingLogin(){
-        File json = new File("src/test/resources/courierWithoutLogin.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
+        CourierApi.createCourier("", "1234", "saske")
+                .then()
+                .statusCode(SC_BAD_REQUEST);
 
     }
     @Test
     @Description("Test for trying create courier without password")
     public void weCantCreateCourierWithMissingPassword(){
-        File json = new File("src/test/resources/courierWithoutPassword.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
+        CourierApi.createCourier("DimDimich", "", "saske")
+                .then()
+                .statusCode(SC_BAD_REQUEST);
 
     }
     @Test
     @Description("Test for trying create courier without First Name")
     public void weCantCreateCourierWithMissingFirstName(){
-        File json = new File("src/test/resources/courierWithoutFirstName.json");
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(json)
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
-
+        CourierApi.createCourier("DimDimich", "1234", "")
+                .then()
+                .statusCode(SC_BAD_REQUEST);
     }
 }
 
