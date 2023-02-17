@@ -36,11 +36,44 @@ public class CourierApi extends BaseApi {
         }
         String id = response.then().statusCode(SC_OK).extract().path("id").toString();
         String path = String.format(UsedUrl.createCourier + "/%s", id);
-        return  given()
+        return given()
                 .spec(baseApi())
                 .header("Content-type", "application/json")
                 .and()
                 .when()
                 .delete(path);
+    }
+
+    public static Response deleteCourierForSecondExercise(String login, String password) {
+        Response response = loginCourier(login, password);
+        String id = response.then().extract().path("id").toString();
+        String path = String.format(UsedUrl.createCourier + "/%s", id);
+        return given()
+                .spec(baseApi())
+                .header("Content-type", "application/json")
+                .and()
+                .when()
+                .delete(path);
+    }
+
+    public static Response deleteCourierWithoutId(String login, String password) {
+        Response response = loginCourier(login, password);
+        String id = response.then().extract().path("id").toString();
+        String path = String.format(UsedUrl.createCourier);
+        return given()
+                .spec(baseApi())
+                .header("Content-type", "application/json")
+                .and()
+                .when()
+                .delete(path);
+    }
+
+    public static Response deleteCourierWithFalseId() {
+        return given()
+                .spec(baseApi())
+                .header("Content-type", "application/json")
+                .and()
+                .when()
+                .delete(UsedUrl.falseIdUrlForDelete);
     }
 }
